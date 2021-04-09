@@ -6,8 +6,9 @@ use yew::{classes, html, Component, ComponentLink, Html, InputData, NodeRef, Sho
 use yew::{events::KeyboardEvent, Classes};
 use yew_services::storage::{Area, StorageService};
 
-mod state;
+mod state; // What is the 'mod' keyword?
 
+// Being used to C# the & (address of) confuses me often
 const KEY: &str = "yew.todomvc.self";
 
 pub enum Msg {
@@ -31,28 +32,34 @@ pub struct Model {
     focus_ref: NodeRef,
 }
 
+// I don't understand this yet, it looks like Component is an abstract
+// class or inteface, and Model is a type?
 impl Component for Model {
-    type Message = Msg;
-    type Properties = ();
+    // These are even more mysterious, looks like templates in C# Class<Msg, ()>
+    type Message = Msg;   // This is pretty cool, still looks like a template type, but more clear actually (Even though I'm not sure yet)
+    type Properties = (); // I think this means it's not used, or it's empty
 
+    // Looks like a constructor here
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
         let entries = {
+            // The 'let' in the 'if' clause seems familiar, but I don't see how you can assign a value 
+            // to the result of a function like Json
             if let Json(Ok(restored_model)) = storage.restore(KEY) {
                 restored_model
             } else {
-                Vec::new()
+                Vec::new() // I think a Vec is like a List in C#, but it's missing the type, so that can't be right.
             }
         };
         let state = State {
             entries,
             filter: Filter::All,
-            value: "".into(),
+            value: "".into(), // What is .into()  it reminds me of an extension method in C# on a string
             edit_value: "".into(),
         };
         let focus_ref = NodeRef::default();
-        Self {
-            link,
+        Self { // this is the return it looks like, and those variables look like the Model struct, 
+            link, //it looks like a Tuple, but I guess it's just a struct being returned without the type name
             storage,
             state,
             focus_ref,
@@ -144,13 +151,15 @@ impl Component for Model {
                         />
                         <label for="toggle-all" />
                         <ul class="todo-list">
+                            // OK I suddenly get the |e|, that's a lambda, e is the input variable name, seems like it would be |a, b| for two 
+                            // input parameters, |_| ignores the variable, or is void like () =>  in C#
                             { for self.state.entries.iter().filter(|e| self.state.filter.fits(e)).enumerate().map(|e| self.view_entry(e)) }
                         </ul>
                     </section>
                     <footer class=classes!("footer", hidden_class)>
                         <span class="todo-count">
                             <strong>{ self.state.total() }</strong>
-                            { " item(s) left" }
+                            { " item(s) left" } // The only thing weird in YEW is this, this is just the inner text
                         </span>
                         <ul class="filters">
                             { for Filter::iter().map(|flt| self.view_filter(flt)) }
@@ -197,6 +206,8 @@ impl Model {
                 class="new-todo"
                 placeholder="What needs to be done?"
                 value=&self.state.value
+                // This InputData and oninput, and callback would be used heavily in forms
+                // I don't understand the 'link' part
                 oninput=self.link.callback(|e: InputData| Msg::Update(e.value))
                 onkeypress=self.link.batch_callback(|e: KeyboardEvent| {
                     if e.key() == "Enter" { Some(Msg::Add) } else { None }
